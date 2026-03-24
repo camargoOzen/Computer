@@ -22,6 +22,7 @@ class RegisterBank:
             'F': "0000000000000000"
         } 
 
+
         cls.stack_pointer = 0
 
         if cls._instance is None:

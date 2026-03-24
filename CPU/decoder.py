@@ -40,7 +40,7 @@ class Decoder:
 
         #Instruction set 3: ALU Operations
         #Instruction form: Opcode[12 Hex] Midcode[2 Hex] RegisterA[1 Hex] RegisterB[1 Hex]
-        if opcode == "20" or opcode =="30":
+        if opcode == "20" or opcode == "21" or opcode =="30":
             midcode = instruction[12:14]
             registerA = instruction[14]
             registerB = instruction[15]
