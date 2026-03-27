@@ -128,6 +128,8 @@ def parse_line(line):
 
     global linea
     
+    outputs = []  # Lista para acumular los outputs en lugar de imprimir
+    
     tokens_list = []
     while True:
         tok = lexer.token()
@@ -139,17 +141,24 @@ def parse_line(line):
         if(tokens_list[0].type == 'ETIQUETA'):
             etiqueta = tokens_list[0].value
             etiquetas[str(etiqueta)] = linea
-            print(f"Etiqueta '{etiqueta}' definida en línea {linea}")
             linea -=1
             
         if(tokens_list[0].type == 'INSTR'):
             instr = tokens_list[0].value
-            print(format(opcodes[instr], '064b'))
+            outputs.append(format(opcodes[instr], '064b'))
+            
+        if(tokens_list[0].type == 'NUMBER'):
+            num = tokens_list[0].value
+            outputs.append(format(num, '064b'))
         
     if len(tokens_list) == 2:
         instr = tokens_list[0].value
-        etiqueta = '('+ str(etiquetas[tokens_list[1].value]) +')'
-        print(format(opcodes[instr], '012b') + '' + etiqueta)
+        if(tokens_list[1].type == 'REGISTER'):
+            r1 = tokens_list[1].value
+            outputs.append(format(opcodes[instr], '056b') + format(r1, '04b'))
+        if(tokens_list[1].type == 'ETIQUETA'):
+            etiqueta = '('+ str(etiquetas[tokens_list[1].value]) +')'
+            outputs.append(format(opcodes[instr], '012b') + '' + etiqueta)
         
         
     if len(tokens_list) == 4:
@@ -158,29 +167,37 @@ def parse_line(line):
         
         if(tokens_list[3].type == 'REGISTER'):
             r2 = tokens_list[3].value
-            print(format(opcodes[instr], '056b') + format(r1, '04b') + format(r2, '04b'))
+            outputs.append(format(opcodes[instr], '056b') + format(r1, '04b') + format(r2, '04b'))
         
         if(tokens_list[3].type == 'NUMBER'):
             num = tokens_list[3].value
-            print(format(opcodes[instr], '08b') + format(r1, '04b') + format(num, '064b'))
+            outputs.append(format(opcodes[instr], '08b') + format(r1, '04b') + format(num, '064b'))
+        
+        if(tokens_list[3].type == 'ETIQUETA'):
+            etiqueta = '('+ str(etiquetas[tokens_list[3].value]) +')'
+            outputs.append(format(opcodes[instr], '012b') + format(r1, '04b') + '' + etiqueta)
         
         
 
-    return "Error de sintaxis"
+    return outputs  # Devolver la lista de outputs
 
 # ========================
 # MAIN
 # ========================
 if __name__ == "__main__":
-    print("Ingrese instrucciones (Ctrl+D para salir):")
-
+    input_file = 'input.txt'
+    output_file = 'output.txt'
+    
     try:
-        while True:
-            line = input(">> ")
-            result = parse_line(line)
-            print(result)
-            
-            linea += 1
-            
-    except EOFError:
-        pass
+        with open(input_file, 'r') as infile, open(output_file, 'w') as outfile:
+            for line in infile:
+                line = line.strip()  # Remover espacios en blanco
+                if line:  # Si la línea no está vacía
+                    outputs = parse_line(line)
+                    for output in outputs:
+                        outfile.write(output + '\n')
+                    linea += 1
+    except FileNotFoundError:
+        print(f"Error: No se pudo encontrar el archivo {input_file}")
+    except Exception as e:
+        print(f"Error: {e}")
