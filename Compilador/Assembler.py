@@ -1,5 +1,8 @@
 import ply.lex as lex
 
+linea = 0
+etiquetas = {}
+
 # ========================
 # TOKENS
 # ========================
@@ -7,7 +10,8 @@ tokens = (
     'INSTR',
     'REGISTER',
     'NUMBER',
-    'COMMA'
+    'COMMA',
+    'ETIQUETA'
 )
 
 t_COMMA = r','
@@ -40,6 +44,12 @@ def t_NUMBER(t):
     t.value = int(t.value)
     return t
 
+def t_ETIQUETA(t):
+    r'[A-Za-z_][A-Za-z0-9_]*:|[A-Za-z_][A-Za-z0-9_]*'
+    if(t.value.endswith(':')):
+        t.value = t.value[:-1]  # Eliminar los dos puntos
+    return t
+
 # Ignorar espacios
 t_ignore = ' \t'
 
@@ -63,7 +73,7 @@ opcodes = {
     'PUSH'  :0x100000000000001,
     'POP'   :0x100000000000002,
     'LEA'   :0x16,
-    'ADD'   :0x2000000000000100,
+    'ADD'   :0x20000000000001,
     'ADDF'  :0x21000000000001,
     'SUB'   :0x20000000000002,
     'SUBF'  :0x21000000000002,
@@ -109,16 +119,6 @@ opcodes = {
     'OUT'   :0X9000000000001
 }
 
-# ========================
-# GENERADOR BINARIO
-# ========================
-def to_binary_64(opcode, r1=0, r2=0, imm=0):
-    value = opcode
-    # value |= (r1 & 0xF) << 48
-    # value |= (r2 & 0xF) << 40
-    # value |= (imm & 0xFFFFFFFFFFFFFFFF)
-    return value
-    # return format(value, '0b')
 
 # ========================
 # PARSER SIMPLE
@@ -126,6 +126,8 @@ def to_binary_64(opcode, r1=0, r2=0, imm=0):
 def parse_line(line):
     lexer.input(line)
 
+    global linea
+    
     tokens_list = []
     while True:
         tok = lexer.token()
@@ -133,23 +135,36 @@ def parse_line(line):
             break
         tokens_list.append(tok)
 
-    # Casos soportados:
-    # MOV R1, R2
-    # MOV R1, 10
-
+    if len(tokens_list) == 1:
+        if(tokens_list[0].type == 'ETIQUETA'):
+            etiqueta = tokens_list[0].value
+            etiquetas[str(etiqueta)] = linea
+            print(f"Etiqueta '{etiqueta}' definida en línea {linea}")
+            linea -=1
+            
+        if(tokens_list[0].type == 'INSTR'):
+            instr = tokens_list[0].value
+            print(format(opcodes[instr], '064b'))
+        
+    if len(tokens_list) == 2:
+        instr = tokens_list[0].value
+        etiqueta = '('+ str(etiquetas[tokens_list[1].value]) +')'
+        print(format(opcodes[instr], '012b') + '' + etiqueta)
+        
+        
     if len(tokens_list) == 4:
         instr = tokens_list[0].value
-        print(format(opcodes[instr], '08b'))
-        # r1 = tokens_list[1].value
-
-        # if tokens_list[2].type == 'COMMA':
-        #     if tokens_list[3].type == 'REGISTER':
-        #         r2 = tokens_list[3].value
-        #         return to_binary_64(opcodes[instr], r1, r2, 0)
-
-        #     elif tokens_list[3].type == 'NUMBER':
-        #         imm = tokens_list[3].value
-        #         return to_binary_64(opcodes[instr], r1, 0, imm)
+        r1 = tokens_list[1].value
+        
+        if(tokens_list[3].type == 'REGISTER'):
+            r2 = tokens_list[3].value
+            print(format(opcodes[instr], '056b') + format(r1, '04b') + format(r2, '04b'))
+        
+        if(tokens_list[3].type == 'NUMBER'):
+            num = tokens_list[3].value
+            print(format(opcodes[instr], '08b') + format(r1, '04b') + format(num, '064b'))
+        
+        
 
     return "Error de sintaxis"
 
@@ -164,5 +179,8 @@ if __name__ == "__main__":
             line = input(">> ")
             result = parse_line(line)
             print(result)
+            
+            linea += 1
+            
     except EOFError:
         pass
