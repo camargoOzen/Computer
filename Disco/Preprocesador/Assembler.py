@@ -192,7 +192,7 @@ if __name__ == "__main__":
         sys.exit(1)
     
     input_file = sys.argv[1]
-    output_file = os.path.join(os.path.dirname(input_file), 'program1.txt')
+    output_file = os.path.join(os.path.dirname(input_file), 'program1.bin')
     
     try:
         with open(input_file, 'r') as infile, open(output_file, 'w') as outfile:
