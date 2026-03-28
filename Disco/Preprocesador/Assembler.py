@@ -201,9 +201,10 @@ def parse_line(line):
             num = tokens_list[3].value
             outputs.append(format(opcodes[instr], '08b') + format(r1, '04b') + format(to_unsigned_64(num), '064b'))
         
+        
         if(tokens_list[3].type == 'ETIQUETA'):
             etiqueta = '('+ str(etiquetas[tokens_list[3].value]) +')'
-            outputs.append(format(opcodes[instr], '012b') + format(r1, '04b') + '' + etiqueta)
+            outputs.append(format(opcodes[instr], '08b') + format(r1, '04b') + '' + etiqueta)
         
         
 
