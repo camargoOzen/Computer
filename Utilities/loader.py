@@ -25,7 +25,8 @@ class Loader:
                     continue
 
                 num_hex_chars = len(line) // 4
-                value = format(int(line, 2), f'0{num_hex_chars}X')
+                mask = (1 << len(line)) - 1
+                value = format(int(line, 2) & mask, f'0{num_hex_chars}X')
 
                 address = format(self.offset, '016X')
                 self.data_ram.write(address, value)

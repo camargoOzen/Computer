@@ -42,7 +42,7 @@ def t_REGISTER(t):
 # NUMEROS (inmediatos)
 # ========================
 def t_NUMBER(t):
-    r'\d+'
+    r'[-+]?\d+'
     t.value = int(t.value)
     return t
 
@@ -126,6 +126,10 @@ opcodes = {
 }
 
 
+def to_unsigned_64(value):
+    return value & ((1 << 64) - 1)
+
+
 # ========================
 # PARSER SIMPLE
 # ========================
@@ -173,7 +177,7 @@ def parse_line(line):
             
         if(tokens_list[0].type == 'NUMBER'):
             num = tokens_list[0].value
-            outputs.append(format(num, '064b'))
+            outputs.append(format(to_unsigned_64(num), '064b'))
         
     if len(tokens_list) == 2:
         instr = tokens_list[0].value
@@ -195,7 +199,7 @@ def parse_line(line):
         
         if(tokens_list[3].type == 'NUMBER'):
             num = tokens_list[3].value
-            outputs.append(format(opcodes[instr], '08b') + format(r1, '04b') + format(num, '064b'))
+            outputs.append(format(opcodes[instr], '08b') + format(r1, '04b') + format(to_unsigned_64(num), '064b'))
         
         if(tokens_list[3].type == 'ETIQUETA'):
             etiqueta = '('+ str(etiquetas[tokens_list[3].value]) +')'
