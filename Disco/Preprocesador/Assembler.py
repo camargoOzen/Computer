@@ -129,6 +129,24 @@ opcodes = {
 # ========================
 # PARSER SIMPLE
 # ========================
+def parse_etiq(line):
+    lexer.input(line)
+    
+    global linea
+    
+    tokens_list = []
+    while True:
+        tok = lexer.token()
+        if not tok:
+            break
+        tokens_list.append(tok)
+
+    if len(tokens_list) == 1:
+        if(tokens_list[0].type == 'ETIQUETA'):
+            etiqueta = tokens_list[0].value
+            etiquetas[str(etiqueta)] = linea
+            linea -=1
+
 def parse_line(line):
     lexer.input(line)
 
@@ -199,7 +217,16 @@ if __name__ == "__main__":
     output_file = os.path.join(os.path.dirname(input_file), 'program1.bin')
     
     try:
+        with open(input_file, 'r') as infile:
+            
+            for l in infile:
+                l = l.strip()
+                if l:  # Si la línea no está vacía
+                    parse_etiq(l)
+                    linea +=1
+                    
         with open(input_file, 'r') as infile, open(output_file, 'w') as outfile:
+            linea = 0
             for line in infile:
                 line = line.strip()  # Remover espacios en blanco
                 if line:  # Si la línea no está vacía
