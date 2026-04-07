@@ -40,7 +40,7 @@ class LinkLoader():
         t.lexer.skip(1)
 
 
-    def link(self, program):
+    def link(self, program: str):
         program_size = len(program.split('\n'))
         self.lexer.input(program)
         result = ""
@@ -72,7 +72,7 @@ class LinkLoader():
     def hex_from_bin(self, value):
         return format(int(value, 2), f'0{len(value) // 4}X')
 
-    def link_load(self, program):
+    def link_load(self, program: str):
         absolut_program  = self.link(program).split('\n')
         for line in absolut_program:
             self.memory.write(address=self.base_address, value=self.hex_from_bin(line))
