@@ -12,6 +12,7 @@ tokens = (
     'NUMBER',
     'COLON',
     'COMMA',
+    'ASSIGN',
     'OTHER',
 
 )
@@ -54,6 +55,8 @@ def t_COMMA(t):
     return t
 
 t_ignore = ' \t'
+
+t_ASSIGN = r'='
 
 def t_OTHER(t):
     r'[A-Za-z_][A-Za-z0-9_]*'
@@ -124,6 +127,12 @@ def preprocess_file(input_path, lib_dir=None, included_files=None):
                 define_name = tokens_list[1].value
                 define_value = tokens_list[2].value
                 macros[define_name] = define_value
+
+            elif tokens_list and tokens_list[0].type == 'OTHER' and len(tokens_list) > 2:
+                var_value = tokens_list[2].value
+                if tokens_list[2].type == 'OTHER' and var_value in macros:
+                    var_value = macros[tokens_list[2].value]
+                output_lines.append(f'{tokens_list[0].value} {tokens_list[1].value} {var_value}')
 
             elif tokens_list and tokens_list[0].type == 'OTHER' and len(tokens_list) > 3:
                 temp_instruction = tokens_list[0].value
