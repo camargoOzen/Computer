@@ -102,7 +102,7 @@ def preprocess_file(input_path, lib_dir=None, included_files=None):
     if lib_dir is None:
 
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        lib_dir = os.path.abspath(os.path.join('Lib'))
+        lib_dir = os.path.abspath(os.path.join('Disco/Lib'))
 
     output_lines = []
     current_dir = os.path.dirname(input_path)
@@ -113,7 +113,7 @@ def preprocess_file(input_path, lib_dir=None, included_files=None):
             lexer.input(line)
             tokens_list = list(lexer)
             lexer.input(line)
-            print(tokens_list)
+            
             if tokens_list and tokens_list[0].type == 'INCLUDE' and len(tokens_list) > 1 and tokens_list[1].type == 'STRING':
                 include_name = tokens_list[1].value
                 include_path = resolve_include_path(include_name, current_dir, lib_dir)
