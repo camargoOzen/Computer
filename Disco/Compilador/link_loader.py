@@ -73,7 +73,11 @@ class LinkLoader():
         return format(int(value, 2), f'0{len(value) // 4}X')
 
     def link_load(self, program: str):
-        absolut_program  = self.link(program).split('\n')
+        absolut_program = self.link(program).split('\n')
+        entry_point = self.base_address
+
         for line in absolut_program:
             self.memory.write(address=self.base_address, value=self.hex_from_bin(line))
             self.base_address += 1
+
+        return entry_point

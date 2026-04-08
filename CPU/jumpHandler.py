@@ -27,16 +27,14 @@ class Jump:
             case "9":                                             # CALL
                 # Push return address (current PC, already advanced) onto stack
                 return_addr = format(pc.address, '016X')
-                sp = format(registers.stack_pointer, '016X')
-                ram.write(sp, return_addr)
-                registers.stack_pointer -= 1
+                ram.stack_push(return_addr)
+                registers.stack_pointer = ram.stack_ptr
                 # Jump to target
                 pc.set_next_instruction(address)
             case "A":                                             # RET
                 # Pop return address from stack
-                registers.stack_pointer += 1
-                sp = format(registers.stack_pointer, '016X')
-                return_addr = ram.read(sp)
+                return_addr = ram.stack_pop()
+                registers.stack_pointer = ram.stack_ptr
                 pc.set_next_instruction(return_addr)
             case "9":
                 pass

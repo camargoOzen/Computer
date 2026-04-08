@@ -1,5 +1,5 @@
 import pytest
-from Disco.Preprocesador.link_loader import LinkLoader
+from Disco.Compilador.link_loader import LinkLoader
 from RAM.dataRam import DataRAM
 
 @pytest.fixture

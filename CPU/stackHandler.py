@@ -6,11 +6,9 @@ class Stack:
     def readStackInstruction(midcode, register):
         match midcode:
             case "1":  # PUSH
-                sp = format(registers.stack_pointer, '016X')
-                ram.write(sp, registers.values[register])
-                registers.stack_pointer -= 1
+                ram.stack_push(registers.values[register])
+                registers.stack_pointer = ram.stack_ptr
 
             case "2":  # POP
-                registers.stack_pointer += 1
-                sp = format(registers.stack_pointer, '016X')
-                registers.values[register] = ram.read(sp)
+                registers.values[register] = ram.stack_pop()
+                registers.stack_pointer = ram.stack_ptr

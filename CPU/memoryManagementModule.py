@@ -4,11 +4,13 @@ class Load:
 
     def loader(opcode, register, value):
 
+        address = int(value, 16) if isinstance(value, str) else int(value)
+
         match opcode:
             #LOAD Instruction
             case "11":
-                registers.values[register] = ram.read(value)
-                print("Load memory address ", value," in register ", register)
+                registers.values[register] = ram.read(address)
+                print("Load memory address ", value, " in register ", register)
 
             #LOADV Instruction
             case "12":
@@ -17,10 +19,10 @@ class Load:
 
             #STORE
             case "13":
-                ram.write(value, registers.values[register])
-                print("Store value of register ",register," in memory address ",value)
+                ram.write(address, registers.values[register])
+                print("Store value of register ", register, " in memory address ", value)
 
             #LEA
             case "16":
-                registers.values[register] = ram.read(value)
-                print("Load effective memory address ", value," in register ", register)
+                registers.values[register] = ram.read(address)
+                print("Load effective memory address ", value, " in register ", register)

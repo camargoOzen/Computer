@@ -21,7 +21,7 @@ class RegisterBank:
             'E': "0000000000000000",
             'F': "0000000000000000"
         } 
-        cls.stack_pointer = 0xFFFF
+        cls.stack_pointer = 1024
         if cls._instance is None:
             # If it doesn't exist yet, create it
             cls._instance = super(RegisterBank, cls).__new__(cls)
