@@ -16,6 +16,7 @@ class LexicalAnalyzer:
 
         # -- Estructuras de selección --
         'if'        : 'IF',
+        'elseif'    : 'ELSEIF',
         'else'      : 'ELSE',
         'switch'    : 'SWITCH',
         'case'      : 'CASE',
@@ -223,51 +224,25 @@ if __name__ == "__main__":
     lex_analyzer = LexicalAnalyzer()
 
     p = """
-    /* Programa de prueba para el analizador léxico
-    Máquina Von Neumann 64 bits                  */
-    
-    struct Punto {
-        int x;
-        int y;
-    }
-    
-    func int suma(int a, int b) {
-        return a + b;
-    }
-    
-    func void main() {
-        int resultado = 0;
-        float pi = 3.14159;
-        bool activo = true;
-        char letra = 'A';
-        int arr[10];
-        int mat[3][3];
-    
-        struct Punto p;
-        p.x = 5;
-        p.y = 10;
-    
-        // Estructura de selección
-        if (resultado == 0) {
-            resultado = suma(p.x, p.y);
-        } else {
-            resultado = 0;
+    // Fibonacci interativo 
+
+    func int fibonacci(int n) {
+        if (n <= 0) {
+            return 0;
+        } elseif (n == 1) {
+            return 1;
         }
-    
-        // Estructura de iteración
-        int i = 0;
-        while (i < 10) {
-            arr[i] = i * 2;
-            i += 1;
+
+        int prev = 0;
+        int curr = 1;
+
+        for (int i = 2; i <= n; i += 1) {
+            int m = prev;
+            prev = curr;
+            curr = m + curr;
         }
-    
-        for (int j = 0; j < 3; j += 1) {
-            mat[j][0] = j;
-        }
-    
-        // Manejo de pila
-        push(resultado);
-        int valor = pop();
+
+        return curr;
     }
     """
 
