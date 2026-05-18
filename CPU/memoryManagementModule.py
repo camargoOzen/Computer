@@ -21,8 +21,24 @@ class Load:
             case "13":
                 ram.write(address, registers.values[register])
                 print("Store value of register ", register, " in memory address ", value)
-
+            
             #LEA
             case "16":
                 registers.values[register] = ram.read(address)
                 print("Load effective memory address ", value, " in register ", register)
+    
+    def registerOperations(opcode, register1, register2):
+        match opcode:       
+            #LOADI
+            case "14":
+                retrieved_value = ram.read(register2)
+                registers.values[register1] = retrieved_value
+                print("Load memory value: ", retrieved_value, " from the memory address: ",register2," in register", register1)
+            #STOREI
+            case "15":
+                address = registers.values[register2]
+                value = registers.values[register1]
+                ram.write(address, value)
+                print("Store value of register ", register, " in memory address ", value)
+                
+            

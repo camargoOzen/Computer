@@ -26,6 +26,11 @@ class Decoder:
             value = instruction[3:(3+16)]
             Load.loader(opcode, register, value)
 
+        if opcode in ("14", "15"):
+            register1 = instruction[-2]
+            register2 = instruction[-1]
+            Load.registerOperations(opcode, register1, register2)
+
         # Stack Operations: PUSH/POP
         if opcode == "10":
             midcode = instruction[14]
