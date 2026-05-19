@@ -225,7 +225,12 @@ def _collect_labels(lines):
             continue
 
         if tokens_list:
-            linea += 1
+            # Check if this is a .SIZE directive that reserves multiple lines
+            if len(tokens_list) == 2 and tokens_list[0].type == 'SIZE':
+                size_count = int(tokens_list[1].value)
+                linea += size_count
+            else:
+                linea += 1
 
 
 def _assemble_line(line):
