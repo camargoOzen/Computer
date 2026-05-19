@@ -24,7 +24,7 @@ class Load:
             
             #LEA
             case "16":
-                registers.values[register] = ram.read(address)
+                registers.values[register] = value
                 print("Load effective memory address ", value, " in register ", register)
     
     def registerOperations(opcode, register1, register2):
@@ -39,6 +39,6 @@ class Load:
                 address = registers.values[register2]
                 value = registers.values[register1]
                 ram.write(address, value)
-                print("Store value of register ", register, " in memory address ", value)
+                print("Store value of register ", register1, " in memory address ", register2)
                 
             
