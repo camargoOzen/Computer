@@ -175,6 +175,7 @@ class LexicalAnalyzer:
                     "scope": None,
                     "param": False,
                     "array_size": None,
+                    "array_dimensions": None,
                 }
 
         return t

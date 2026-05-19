@@ -103,10 +103,13 @@ def p_field_list_single(p):
 def p_field_decl(p):
     'field_decl : type ID array_size_opt SEMICOLON'
     symbol_table[p[2]]["type"] = p[1]
-    if isinstance(p[1], ast.Matriz_suffix_node):
+    if isinstance(p[3], ast.Matriz_suffix_node):
         symbol_table[p[2]]["array_size"] = p[3].size1 * p[3].size2 if p[3] else None
-    else:
+        # Guardar las dimensiones para acceso multidimensional
+        symbol_table[p[2]]["array_dimensions"] = (p[3].size1, p[3].size2) if p[3] else None
+    elif isinstance(p[3], ast.Array_suffix_node):
         symbol_table[p[2]]["array_size"] = p[3].size if p[3] else None
+        symbol_table[p[2]]["array_dimensions"] = (p[3].size,) if p[3] else None
 
     p[0] = ast.Field_node(p[1], p[2], p[3])
 
@@ -158,8 +161,11 @@ def p_var_decl(p):
         symbol_table[p[2]]["type"] = p[1]
         if isinstance(p[3], ast.Matriz_suffix_node):
             symbol_table[p[2]]["array_size"] = p[3].size1 * p[3].size2 if p[3] else None
+            # Guardar las dimensiones para acceso multidimensional
+            symbol_table[p[2]]["array_dimensions"] = (p[3].size1, p[3].size2) if p[3] else None
         else:
             symbol_table[p[2]]["array_size"] = p[3].size if p[3] else None
+            symbol_table[p[2]]["array_dimensions"] = (p[3].size,) if p[3] else None
     
     p[0] = ast.Var_node(p[1], p[2], p[3], p[4])
 

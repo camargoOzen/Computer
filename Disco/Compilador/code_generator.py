@@ -191,19 +191,52 @@ class CodeGenerator:
     def _calculate_array_address(self, lvalue_node):
         """
         Calcula la dirección de un elemento de array.
+        Para matrices multidimensionales, usa la fórmula: fila * num_columnas + columna
         Retorna el registro que contiene la dirección calculada.
         Nota: Esta función mantiene todos los registros asignados sin liberar.
         """
         base_reg = self.allocate_register()
         self.emit("LEA", f"R{base_reg}", lvalue_node.ID)
         
+        # Obtener información de dimensiones del símbolo
+        array_info = self.symbol_table.get(lvalue_node.ID, {})
+        array_dimensions = array_info.get("array_dimensions")
+        
         # Procesar cada índice (para arrays multidimensionales)
+        indices = []
         for index_access in lvalue_node.lvalue_tail:
             if index_access[0] == '[':
                 # index_access es ['[', expr, ']']
                 index_expr = index_access[1]
                 index_reg = index_expr.accept(self)
-                # Sumar el índice a la dirección base
+                indices.append(index_reg)
+        
+        # Calcular el offset según las dimensiones
+        if array_dimensions and len(array_dimensions) == 2 and len(indices) == 2:
+            # Array 2D: offset = fila * num_columnas + columna
+            num_cols = array_dimensions[1]
+            fila_reg = indices[0]
+            col_reg = indices[1]
+            
+            # Usar un registro temporal para calcular el offset sin modificar los originales
+            offset_reg = self.allocate_register()
+            self.emit("CPY", f"R{offset_reg}", f"R{fila_reg}")  # offset = fila
+            num_cols_reg = self.allocate_register()  # Asignar un registro para num_cols
+            self.emit("LOADV", f"R{num_cols_reg}", num_cols)
+            self.emit("MUL", f"R{offset_reg}", f"R{num_cols_reg}")  # offset = fila * num_cols
+            self.emit("ADD", f"R{offset_reg}", f"R{col_reg}")  # offset += col
+            
+            # Sumar el offset a la dirección base
+            self.emit("ADD", f"R{base_reg}", f"R{offset_reg}")
+            
+            # Liberar todos los registros
+            self.free_register(fila_reg)
+            self.free_register(col_reg)
+            self.free_register(offset_reg)
+            self.free_register(num_cols_reg)
+        else:
+            # Array 1D o fallback: simplemente sumar todos los índices
+            for index_reg in indices:
                 self.emit("ADD", f"R{base_reg}", f"R{index_reg}")
                 self.free_register(index_reg)
         
