@@ -10,6 +10,7 @@ class CodeGenerator:
         self.parameter_registers = set()  # Registros que contienen parámetros (NO se deben liberar)
         self.label_counter = 0
         self.loop_stack = []
+        self.current_function = None  # Almacena el nombre de la función actual
 
     def visit_And_node(self, node):
         # Cortocircuito: si el primero es falso, no evalúa el segundo
@@ -75,6 +76,12 @@ class CodeGenerator:
         label = f"L{self.label_counter}"
         self.label_counter += 1
         return label
+
+    def _qualify_variable_name(self, var_name):
+        """Genera un nombre cualificado para una variable dentro de una función"""
+        if self.current_function and self.current_function != "main":
+            return f"{self.current_function}_{var_name}"
+        return var_name
 
     def emit(self, instr, *args):
         if args:
@@ -154,41 +161,43 @@ class CodeGenerator:
     def visit_Var_node(self, node):
 
         info = self.symbol_table[node.ID]
+        qualified_name = self._qualify_variable_name(node.ID)
 
         if node.Var_suffix_node:
             if isinstance(node.Var_suffix_node, Array_suffix_node):
-                self.emit_data_label(node.ID)
+                self.emit_data_label(qualified_name)
                 self.emit_data(".SIZE", self.symbol_table[node.ID].get("array_size"))
             elif isinstance(node.Var_suffix_node, Matriz_suffix_node):
-                self.emit_data_label(node.ID)
+                self.emit_data_label(qualified_name)
                 self.emit_data(".SIZE", self.symbol_table[node.ID].get("array_size"))
         elif (info["type"] not in ("int", "struct", "float", "void", "string", "char", "bool", "func")):
             
 
             for field in self.symbol_table[info["type"]]["field_list"]:
-                self.emit_data_label(f"{node.ID}_{field}")
+                self.emit_data_label(f"{qualified_name}_{field}")
                 self.emit_data(".SIZE", self.symbol_table[field]["array_size"] if self.symbol_table[field].get("array_size") else 1)
         else:
             
-            self.emit_data_label(node.ID)
+            self.emit_data_label(qualified_name)
             self.emit_data(".SIZE",1)
         if node.init:
             reg = node.init.accept(self)
-            self.emit("STORE", f"R{reg}", node.ID)
+            self.emit("STORE", f"R{reg}", qualified_name)
             self.free_register(reg)
 
     def visit_Var_decl_node(self, node):
         """Visita una declaración de variable inline (usada en for)"""
         info = self.symbol_table[node.ID]
+        qualified_name = self._qualify_variable_name(node.ID)
         
         # Reservar espacio para la variable
-        self.emit_data_label(node.ID)
+        self.emit_data_label(qualified_name)
         self.emit_data(".SIZE", 1)
         
         # Si hay inicialización, generar código para asignarla
         if node.init_opt:
             reg = node.init_opt.accept(self)
-            self.emit("STORE", f"R{reg}", node.ID)
+            self.emit("STORE", f"R{reg}", qualified_name)
             self.free_register(reg)
 
     def _calculate_array_address(self, lvalue_node):
@@ -199,7 +208,8 @@ class CodeGenerator:
         Nota: Esta función mantiene todos los registros asignados sin liberar.
         """
         base_reg = self.allocate_register()
-        self.emit("LEA", f"R{base_reg}", lvalue_node.ID)
+        qualified_name = self._qualify_variable_name(lvalue_node.ID)
+        self.emit("LEA", f"R{base_reg}", qualified_name)
         
         # Obtener información de dimensiones del símbolo
         array_info = self.symbol_table.get(lvalue_node.ID, {})
@@ -253,6 +263,7 @@ class CodeGenerator:
 
     def visit_Lvalue_node(self, node):
         info = self.symbol_table[node.ID]
+        qualified_name = self._qualify_variable_name(node.ID)
 
         # El parámetro ya esta cargado en registro
         if info.get("param") == True and "reg" in info:
@@ -268,20 +279,21 @@ class CodeGenerator:
 
         # Acceso a campo de estructura
         if (info["type"] not in ("int", "struct", "float", "void", "string", "char", "bool", "func")):
-            field_name = f"{node.ID}_{node.lvalue_tail[0][1]}"
+            field_name = f"{qualified_name}_{node.lvalue_tail[0][1]}"
             reg = self.allocate_register()
             self.emit("LOAD", f"R{reg}", field_name)
             return reg
 
         # Variable normal en memoria - retorna el VALOR
         reg = self.allocate_register()
-        self.emit("LOAD", f"R{reg}", node.ID)
+        self.emit("LOAD", f"R{reg}", qualified_name)
         return reg
 
     def visit_Assign_node(self, node):
         reg = node.expr_node.accept(self)
         info = self.symbol_table[node.Lvalue_node.ID]
         lvalue = node.Lvalue_node
+        qualified_name = self._qualify_variable_name(lvalue.ID)
 
         # Asignación a un elemento de array
         if self._is_array_access(lvalue):
@@ -293,7 +305,7 @@ class CodeGenerator:
 
         # Asignación a campo de estructura
         if (info["type"] not in ("int", "struct", "float", "void", "string", "char", "bool", "func")):
-            field_name = f"{lvalue.ID}_{lvalue.lvalue_tail[0][1]}"
+            field_name = f"{qualified_name}_{lvalue.lvalue_tail[0][1]}"
             self.emit("STORE", f"R{reg}", field_name)
             self.free_register(reg)
             return
@@ -305,7 +317,7 @@ class CodeGenerator:
             self.emit("CPY", f"R{param_reg}", f"R{reg}")
         else:
             # Si es una variable normal, almacenar en memoria
-            self.emit("STORE", f"R{reg}", lvalue.ID)
+            self.emit("STORE", f"R{reg}", qualified_name)
         
         self.free_register(reg)
 
@@ -792,6 +804,9 @@ class CodeGenerator:
         self.liberar_registros_parametros()
         self.parameter_registers.clear()
         
+        # Establecer la función actual para generar labels cualificados
+        self.current_function = node.ID
+        
         self.emit_label(f"func_{node.ID}")
 
         # Registrar parámetros en la tabla de símbolos
@@ -806,10 +821,11 @@ class CodeGenerator:
                 self.symbol_table[param.ID]["reg"] = reg
                 self.parameter_registers.add(reg)  # Marcar como registro de parámetro
 
-        
-
         for stmt in node.Block_node:
             stmt.accept(self)
+        
+        # Limpiar función actual al salir
+        self.current_function = None
 
         
 
@@ -824,7 +840,6 @@ class CodeGenerator:
             self.free_register(reg)
         
         self.emit("CALL", f"func_{node.ID}")
-        self.parameter_registers.clear()  # Limpiar registros de parámetros después de la llamada
 
         reg = self.allocate_register()
         return reg

@@ -5,12 +5,14 @@ from ..components.ram_block import RamBlock
 from ..components.mod_ram_block import ModRamBlock
 from ..components.base_address_block import BaseAddressBlock
 from ..components.button_panel import ButtonPanel
+from ..components.store_results_block import StoreResultsBlock
 from RAM.dataRam import ram
 from Utilities.execute import Execute
 from Disco.Compilador.link_loader import LinkLoader
 from CPU.registers import registers
 from CPU.pc import pc
 from CPU.flags import flags
+from CPU.storeOperationTracker import store_tracker
 
 class SecondColumn:
     def __init__(self, page: ft.Page):
@@ -51,6 +53,7 @@ class SecondColumn:
         self.ram_block = RamBlock(on_execute=self._auto_execution)
         self.mod_ram_block = ModRamBlock(on_modify=self._mod_ram_write)
         self.base_address_block = BaseAddressBlock()
+        self.store_results_block = StoreResultsBlock()
         self.entry_point_field = ft.TextField(
             label="Entrada (HEX)",
             hint_text="Ej: 0F",
@@ -101,6 +104,7 @@ class SecondColumn:
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN
                 ),
                 self.mod_ram_block.mod_ram_block_comp,
+                self.store_results_block.store_results_block_comp,
                 self.entry_point_field,
                 ft.Container(
                     **AppStyles.list_view(),
@@ -158,6 +162,7 @@ class SecondColumn:
         self.execute.execute_program_auto()
         self.ram_block.highlight_address = None  # Limpiar resaltado
         self.execution_state.value = self.execute.get_final_state_text()
+        self.store_results_block.refresh()
         self.ram_block.refresh()
         self.page.update()
         self.band = False
@@ -174,6 +179,7 @@ class SecondColumn:
         current_pc = self.execute.program_counter.get_next_instruction()
         self.ram_block.highlight_address = current_pc
         self.execution_state.value = self.execute.get_final_state_text(highlight_pc=True)
+        self.store_results_block.refresh()
         self.ram_block.refresh()
         self.page.update()
 
@@ -197,6 +203,7 @@ class SecondColumn:
         ram.reset()
         pc.reset()
         flags.reset()
+        store_tracker.reset()
         
         # Reset UI state
         self.base_address = "0"
@@ -212,6 +219,7 @@ class SecondColumn:
         self.ram_block.highlight_address = None  # Limpiar resaltado
         
         # Refresh components
+        self.store_results_block.refresh()
         self.ram_block.refresh()
         self.page.update()
         

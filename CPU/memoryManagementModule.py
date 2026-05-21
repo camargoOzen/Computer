@@ -1,5 +1,7 @@
 from RAM.dataRam import ram
 from CPU.registers import registers
+from CPU.storeOperationTracker import store_tracker
+
 class Load:
 
     def loader(opcode, register, value):
@@ -20,6 +22,7 @@ class Load:
             #STORE
             case "13":
                 ram.write(address, registers.values[register])
+                store_tracker.log_store(format(address, '016X'), registers.values[register])
                 print("Store value of register ", register, " in memory address ", value)
             
             #LEA
@@ -39,6 +42,7 @@ class Load:
                 address = registers.values[register2]
                 value = registers.values[register1]
                 ram.write(address, value)
+                store_tracker.log_store(address, value)
                 print("Store value of register ", register1, " in memory address ", register2)
                 
             
