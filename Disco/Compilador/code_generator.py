@@ -413,7 +413,14 @@ class CodeGenerator:
         if isinstance(cond, Relational_node):
             r1 = cond.left_expr.accept(self)
             r2 = cond.right_expr.accept(self)
-            self.emit("CMP", f"R{r1}", f"R{r2}")
+            
+            expr_type = self.get_expression_type(node)
+        
+            if expr_type == "float":
+                self.emit("CMPF", f"R{r1}", f"R{r2}")
+            else:
+                self.emit("CMP", f"R{r1}", f"R{r2}")
+
             self.free_register(r2)
             self.free_register(r1)
             if cond.symbol == '<':
@@ -433,7 +440,14 @@ class CodeGenerator:
         elif isinstance(cond, Equality_node):
             r1 = cond.left_expr.accept(self)
             r2 = cond.right_expr.accept(self)
-            self.emit("CMP", f"R{r1}", f"R{r2}")
+            
+            expr_type = self.get_expression_type(node)
+        
+            if expr_type == "float":
+                self.emit("CMPF", f"R{r1}", f"R{r2}")
+            else:
+                self.emit("CMP", f"R{r1}", f"R{r2}")
+
             self.free_register(r2)
             self.free_register(r1)
             if cond.symbol == '==':
@@ -469,7 +483,12 @@ class CodeGenerator:
         if isinstance(cond, Relational_node):
             r1 = cond.left_expr.accept(self)
             r2 = cond.right_expr.accept(self)
-            self.emit("CMP", f"R{r1}", f"R{r2}")
+            expr_type = self.get_expression_type(node)
+        
+            if expr_type == "float":
+                self.emit("CMPF", f"R{r1}", f"R{r2}")
+            else:
+                self.emit("CMP", f"R{r1}", f"R{r2}")
             self.free_register(r2)
             self.free_register(r1)
             if cond.symbol == '<':
@@ -489,7 +508,12 @@ class CodeGenerator:
         elif isinstance(cond, Equality_node):
             r1 = cond.left_expr.accept(self)
             r2 = cond.right_expr.accept(self)
-            self.emit("CMP", f"R{r1}", f"R{r2}")
+            expr_type = self.get_expression_type(node)
+
+            if expr_type == "float":
+                self.emit("CMPF", f"R{r1}", f"R{r2}")
+            else:
+                self.emit("CMP", f"R{r1}", f"R{r2}")
             self.free_register(r2)
             self.free_register(r1)
             if cond.symbol == '==':
@@ -536,7 +560,12 @@ class CodeGenerator:
         if isinstance(cond, Relational_node):
             r1 = cond.left_expr.accept(self)
             r2 = cond.right_expr.accept(self)
-            self.emit("CMP", f"R{r1}", f"R{r2}")
+            expr_type = self.get_expression_type(node)
+        
+            if expr_type == "float":
+                self.emit("CMPF", f"R{r1}", f"R{r2}")
+            else:
+                self.emit("CMP", f"R{r1}", f"R{r2}")
             self.free_register(r2)
             self.free_register(r1)
             # Saltos según el símbolo
@@ -557,7 +586,12 @@ class CodeGenerator:
         elif isinstance(cond, Equality_node):
             r1 = cond.left_expr.accept(self)
             r2 = cond.right_expr.accept(self)
-            self.emit("CMP", f"R{r1}", f"R{r2}")
+            expr_type = self.get_expression_type(node)
+
+            if expr_type == "float":
+                self.emit("CMPF", f"R{r1}", f"R{r2}")
+            else:
+                self.emit("CMP", f"R{r1}", f"R{r2}")
             self.free_register(r2)
             self.free_register(r1)
             if cond.symbol == '==':
@@ -601,7 +635,12 @@ class CodeGenerator:
             if isinstance(cond, Relational_node):
                 r1 = cond.left_expr.accept(self)
                 r2 = cond.right_expr.accept(self)
-                self.emit("CMP", f"R{r1}", f"R{r2}")
+                expr_type = self.get_expression_type(node)
+        
+                if expr_type == "float":
+                    self.emit("CMPF", f"R{r1}", f"R{r2}")
+                else:
+                    self.emit("CMP", f"R{r1}", f"R{r2}")
                 self.free_register(r2)
                 self.free_register(r1)
                 if cond.symbol == '<':
@@ -621,7 +660,12 @@ class CodeGenerator:
             elif isinstance(cond, Equality_node):
                 r1 = cond.left_expr.accept(self)
                 r2 = cond.right_expr.accept(self)
-                self.emit("CMP", f"R{r1}", f"R{r2}")
+                expr_type = self.get_expression_type(node)
+        
+                if expr_type == "float":
+                    self.emit("CMPF", f"R{r1}", f"R{r2}")
+                else:
+                    self.emit("CMP", f"R{r1}", f"R{r2}")
                 self.free_register(r2)
                 self.free_register(r1)
                 if cond.symbol == '==':
@@ -678,7 +722,12 @@ class CodeGenerator:
         if isinstance(cond, Relational_node):
             r1 = cond.left_expr.accept(self)
             r2 = cond.right_expr.accept(self)
-            self.emit("CMP", f"R{r1}", f"R{r2}")
+            expr_type = self.get_expression_type(node)
+        
+            if expr_type == "float":
+                self.emit("CMPF", f"R{r1}", f"R{r2}")
+            else:
+                self.emit("CMP", f"R{r1}", f"R{r2}")
             self.free_register(r2)
             self.free_register(r1)
             # Si la condición es verdadera, volvemos al inicio
@@ -697,7 +746,12 @@ class CodeGenerator:
         elif isinstance(cond, Equality_node):
             r1 = cond.left_expr.accept(self)
             r2 = cond.right_expr.accept(self)
-            self.emit("CMP", f"R{r1}", f"R{r2}")
+            expr_type = self.get_expression_type(node)
+        
+            if expr_type == "float":
+                self.emit("CMPF", f"R{r1}", f"R{r2}")
+            else:
+                self.emit("CMP", f"R{r1}", f"R{r2}")
             self.free_register(r2)
             self.free_register(r1)
             if cond.symbol == '==':
