@@ -396,6 +396,7 @@ class CodeGenerator:
         
         self.free_register(r2)
         self.free_register(r1)
+        return r1
 
     # ========================
     # CONTROL DE FLUJO
