@@ -3,12 +3,20 @@ Compilador Principal - Integra todos los pasos de compilación
 Flujo: Léxico → Sintáctico → Semántico → Generación de Código → Ensamblador
 """
 
-from .lexical_analyzer import LexicalAnalyzer
-from .sintactic_analyzer import parse
-from .semantic_analyzer import SemanticAnalyzer
-from .code_generator import CodeGenerator
-from .Assembler import assemble_program
-from .Preprocessor import preprocess_program
+try:
+    from .lexical_analyzer import LexicalAnalyzer
+    from .sintactic_analyzer import parse
+    from .semantic_analyzer import SemanticAnalyzer
+    from .code_generator import CodeGenerator
+    from .Assembler import assemble_program
+    from .Preprocessor import preprocess_program
+except ImportError:
+    from lexical_analyzer import LexicalAnalyzer
+    from sintactic_analyzer import parse
+    from semantic_analyzer import SemanticAnalyzer
+    from code_generator import CodeGenerator
+    from Assembler import assemble_program
+    from Preprocessor import preprocess_program
 import sys
 
 class Compiler:
