@@ -780,9 +780,16 @@ class CodeGenerator:
     # ========================
     # FUNCIONES
     # ========================
-
+    def liberar_registros_parametros(self):
+        """Libera todos los registros que contienen parámetros"""
+        for reg in self.parameter_registers:
+            if reg in self.allocated_registers:
+                self.allocated_registers.remove(reg)
+        self.parameter_registers.clear()
+    
     def visit_Func_node(self, node):
         # Limpiar registros de parámetro del context anterior
+        self.liberar_registros_parametros()
         self.parameter_registers.clear()
         
         self.emit_label(f"func_{node.ID}")
@@ -815,8 +822,9 @@ class CodeGenerator:
                 self.emit("LOAD", f"R{reg}", f"{arg.ID}")  # Asegurar que el argumento esté en memoria (si es variable)
             self.emit("PUSH", f"R{reg}")
             self.free_register(reg)
-
+        
         self.emit("CALL", f"func_{node.ID}")
+        self.parameter_registers.clear()  # Limpiar registros de parámetros después de la llamada
 
         reg = self.allocate_register()
         return reg

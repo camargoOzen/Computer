@@ -36,7 +36,7 @@ func void main(){
     int resultado_suma;
     int resultado_pow;
     float resultado_area;
-    float r = 2;
+    float r = 2.0;
 
     x = 22* 2 -3 *y;
 
