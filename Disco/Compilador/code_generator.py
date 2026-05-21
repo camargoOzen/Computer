@@ -7,6 +7,7 @@ class CodeGenerator:
         self.data = []
         self.symbol_table = {}
         self.allocated_registers = set()  # Registros actualmente en uso
+        self.parameter_registers = set()  # Registros que contienen parámetros (NO se deben liberar)
         self.label_counter = 0
         self.loop_stack = []
 
@@ -66,7 +67,8 @@ class CodeGenerator:
 
     def free_register(self, reg=None):
         """Libera un registro específico o el más recientemente asignado"""
-        if reg is not None and reg in self.allocated_registers:
+        # NO liberar registros que contienen parámetros
+        if reg is not None and reg in self.allocated_registers and reg not in self.parameter_registers:
             self.allocated_registers.remove(reg)
 
     def generate_label(self):
@@ -129,6 +131,7 @@ class CodeGenerator:
         self.data = []
         self.symbol_table = symbol_table
         self.allocated_registers = set()
+        self.parameter_registers = set()
         self.label_counter = 0
 
         if isinstance(ast_root, list):
@@ -779,6 +782,9 @@ class CodeGenerator:
     # ========================
 
     def visit_Func_node(self, node):
+        # Limpiar registros de parámetro del context anterior
+        self.parameter_registers.clear()
+        
         self.emit_label(f"func_{node.ID}")
 
         # Registrar parámetros en la tabla de símbolos
@@ -791,6 +797,7 @@ class CodeGenerator:
                 self.emit("POP", f"R{reg}")
                 self.symbol_table[param.ID]["param"] = True
                 self.symbol_table[param.ID]["reg"] = reg
+                self.parameter_registers.add(reg)  # Marcar como registro de parámetro
 
         
 
@@ -802,7 +809,6 @@ class CodeGenerator:
     def visit_Call_node(self, node):
         for arg in node.args:
             reg = arg.accept(self)
-            self.emit("LOAD", f"R{reg}", f"{arg.ID}")  # Asegurar que el valor esté en el registro
             self.emit("PUSH", f"R{reg}")
             self.free_register(reg)
 
@@ -816,6 +822,5 @@ class CodeGenerator:
             reg = node.expr_opt.accept(self)
             self.emit("CPY", "R1", f"R{reg}")  # Copiar el valor de retorno a R1
             self.free_register(reg)
-            print("REgistroL: ",reg)
         self.emit("PUSH", "R0")  # Restaurar SP para main
         self.emit("RET")
