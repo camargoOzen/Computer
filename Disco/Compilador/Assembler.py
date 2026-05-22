@@ -14,7 +14,10 @@ tokens = (
     'REGISTER',
     'NUMBER',
     'COMMA',
-    'ETIQUETA'
+    'ETIQUETA',
+    'SIZE',
+    "DATA",
+    "CODE"
 )
 
 t_COMMA = r','
@@ -23,7 +26,19 @@ t_COMMA = r','
 # INSTRUCCIONES
 # ========================
 def t_INSTR(t):
-    r'LOADV|LOAD|STORE|PUSH|POP|LEA|ADDF|ADD|SUBF|SUB|MULF|MUL|DIVF|DIV|MODF|MOD|CPY|INC|DEC|CMPF|CMP|I2F|F2I|TEST|AND|OR|XOR|NOT|NAND|NOR|SHL|SHR|ROL|ROR|JMP|JZ|JNZ|JP|JN|JC|JNC|JO|JNO|CALL|RET|CLI|STI|NOP|IN|OUT'
+    r'LOADV|LOADI|LOAD|STOREI|STORE|PUSH|POP|LEA|ADDF|ADD|SUBF|SUB|MULF|MUL|DIVF|DIV|MODF|MOD|CPY|INC|DEC|CMPF|CMP|I2F|F2I|TEST|AND|OR|XOR|NOT|NAND|NOR|SHL|SHR|ROL|ROR|JMP|JZ|JNZ|JP|JN|JC|JNC|JO|JNO|CALL|RET|CLI|STI|NOP|IN|OUT'
+    return t
+
+def t_SIZE(t):
+    r'\.SIZE'
+    return t
+
+def t_DATA(t):
+    r'\.DATA'
+    return t
+
+def t_CODE(t):
+    r'\.CODE'
     return t
 
 # ========================
@@ -79,8 +94,10 @@ lexer = lex.lex()
 # ========================
 opcodes = {
     'LOAD'  :0x11,
+    'LOADI' :0x14000000000000,
     'LOADV' :0x12,
     'STORE' :0x13,
+    'STOREI':0x15000000000000,
     'PUSH'  :0x100000000000001,
     'POP'   :0x100000000000002,
     'LEA'   :0x16,
@@ -129,6 +146,11 @@ opcodes = {
     'IN'    :0X9000000000000,
     'OUT'   :0X9000000000001
 }
+
+
+def reserve_size(n, outputs: list):
+    for size in range(n):
+        outputs.append(format(0, '064b'))
 
 
 def to_unsigned_64(value):
@@ -203,7 +225,12 @@ def _collect_labels(lines):
             continue
 
         if tokens_list:
-            linea += 1
+            # Check if this is a .SIZE directive that reserves multiple lines
+            if len(tokens_list) == 2 and tokens_list[0].type == 'SIZE':
+                size_count = int(tokens_list[1].value)
+                linea += size_count
+            else:
+                linea += 1
 
 
 def _assemble_line(line):
@@ -227,6 +254,8 @@ def _assemble_line(line):
         if tokens_list[1].type == 'ETIQUETA':
             etiqueta = '(' + str(etiquetas[tokens_list[1].value]) + ')'
             outputs.append(format(opcodes[instr], '012b') + etiqueta)
+        if tokens_list[0].type == 'SIZE':
+            reserve_size(int(tokens_list[1].value),outputs)
 
     if len(tokens_list) == 4:
         instr = tokens_list[0].value

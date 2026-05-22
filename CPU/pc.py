@@ -25,6 +25,10 @@ class ProgramCounter:
                 self.address = int(next_address)
         else:
             self.address = (self.address + 1) & self.MASK
+    
+    def reset(self, address=0):
+        """Reset program counter to initial state"""
+        self.address = address
             
 # Usage
 pc = ProgramCounter()

@@ -58,16 +58,15 @@ class Loader:
             addresses = range(start, int(end_hex, 16) + 1)
         else:
             addresses = sorted(
-                int(addr, 16)
+                addr
                 for addr in self.data_ram.storage
-                if int(addr, 16) >= start
+                if addr >= start
             )
         with open(file_path, "w") as file:
             for addr in addresses:
-                addr_str = format(addr, '016X')
-                if addr_str not in self.data_ram.storage:
+                if addr not in self.data_ram.storage:
                     continue
-                hex_value = self.data_ram.storage[addr_str]
+                hex_value = self.data_ram.storage[addr]
                 num_bits = len(hex_value) * 4
                 binary = format(int(hex_value, 16), f'0{num_bits}b')
                 file.write(binary + "\n")

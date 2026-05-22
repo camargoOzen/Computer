@@ -65,7 +65,7 @@ class LinkLoader():
 
     def _memory_check(self, memory_ptr, program_size):
         for i in range(memory_ptr, memory_ptr + program_size):
-            if self.memory.storage[i] != "0" * 16:
+            if self.memory.read(i) != "0" * 16:
                 return i + 1
         return memory_ptr
 

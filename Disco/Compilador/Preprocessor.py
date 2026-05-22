@@ -1,74 +1,13 @@
 import os
-import ply.lex as lex
+import re
 import sys
 
-# ========================
-# TOKENS
-# ========================
-tokens = (
-    'INCLUDE',
-    'DEFINE',
-    'STRING',
-    'NUMBER',
-    'COLON',
-    'COMMA',
-    'ASSIGN',
-    'OTHER',
+INCLUDE_RE = re.compile(r'^\s*INCLUDE\s+("[^"]+"|\'[^\']+\')\s*$', re.IGNORECASE)
+DEFINE_RE = re.compile(r'^\s*DEFINE\s+([A-Za-z_][A-Za-z0-9_]*)\s+(.+?)\s*$')
 
-)
 
-# ========================
-# STRINGS
-# ========================
-def t_INCLUDE(t):
-    r'INCLUDE'
-    return t
-
-def t_DEFINE(t):
-    r'DEFINE'
-    return t
-
-def t_STRING(t):
-    r'"[^"]*"|\'[^\']*\''
-    t.value = t.value[1:-1]  # Remove ""
-    return t
-
-def t_NUMBER(t):
-    r'[-+]?(?:\d+\.\d*|\.\d+|\d+)(?:[eE][-+]?\d+)?'
-    raw = t.value
-    if ('.' in raw) or ('e' in raw) or ('E' in raw):
-        t.value = float(raw)
-    else:
-        t.value = int(raw)
-    return t
-
-def t_COMMENT(t):
-    r';[^\n]*'
-    pass
-
-def t_COLON(t):
-    r':'
-    return t
-
-def t_COMMA(t):
-    r','
-    return t
-
-t_ignore = ' \t'
-
-t_ASSIGN = r'='
-
-def t_OTHER(t):
-    r'[A-Za-z_][A-Za-z0-9_]*'
-    return t
-
-def t_error(t):
-    print(f"Caracter ilegal: {t.value[0]}")
-    t.lexer.skip(1)
-
-lexer = lex.lex()
-
-macros = {}
+def _default_lib_dir():
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Lib'))
 
 
 def resolve_include_path(include_name, current_dir, lib_dir):
@@ -90,12 +29,71 @@ def resolve_include_path(include_name, current_dir, lib_dir):
     )
 
 
-def preprocess_file(input_path, lib_dir=None, included_files=None):
+def _preprocess_lines(lines, current_dir, lib_dir, included_files, macros_table):
+    output_lines = []
+
+    for raw_line in lines:
+        line = raw_line.rstrip('\n')
+
+        include_match = INCLUDE_RE.match(line)
+        if include_match:
+            include_name = include_match.group(1)[1:-1]
+            include_path = resolve_include_path(include_name, current_dir, lib_dir)
+            included_lines = preprocess_file(
+                include_path,
+                lib_dir=lib_dir,
+                included_files=included_files,
+                macros=macros_table,
+            )
+            output_lines.extend(included_lines)
+            continue
+
+        define_match = DEFINE_RE.match(line)
+        if define_match:
+            define_name = define_match.group(1)
+            define_value = define_match.group(2)
+            macros_table[define_name] = define_value
+            continue
+
+        processed_line = line
+        if macros_table:
+            # Reemplaza macros completas sin alterar puntuacion ni espaciado original.
+            for name, value in macros_table.items():
+                processed_line = re.sub(rf'\b{re.escape(name)}\b', str(value), processed_line)
+
+        output_lines.append(processed_line)
+
+    return output_lines
+
+
+def preprocess_program(program, current_dir=None, lib_dir=None, included_files=None, macros_table=None):
+    """Preprocesa un string ASM y expande las directivas INCLUDE y DEFINE."""
+    if current_dir is None:
+        current_dir = os.getcwd()
+
+    if lib_dir is None:
+        lib_dir = _default_lib_dir()
+
+    if included_files is None:
+        included_files = set()
+
+    if macros_table is None:
+        macros_table = {}
+
+    return '\n'.join(
+        _preprocess_lines(program.splitlines(), current_dir, lib_dir, included_files, macros_table)
+    )
+
+
+def preprocess_file(input_path, lib_dir=None, included_files=None, macros=None):
     """Preprocesa un archivo ASM y expande las directivas INCLUDE y DEFINE."""
     input_path = os.path.abspath(input_path)
 
     if included_files is None:
         included_files = set()
+
+    if macros is None:
+        macros = {}
 
     if input_path in included_files:
         raise ValueError(f"Ciclo de inclusión detectado: {input_path}")
@@ -103,54 +101,18 @@ def preprocess_file(input_path, lib_dir=None, included_files=None):
     included_files.add(input_path)
 
     if lib_dir is None:
+        lib_dir = _default_lib_dir()
 
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        lib_dir = os.path.abspath(os.path.join('Disco/Lib'))
-
-    output_lines = []
     current_dir = os.path.dirname(input_path)
 
     with open(input_path, 'r', encoding='utf-8') as infile:
-        for raw_line in infile:
-            line = raw_line.rstrip('\n')
-            lexer.input(line)
-            tokens_list = list(lexer)
-            lexer.input(line)
-            
-            if tokens_list and tokens_list[0].type == 'INCLUDE' and len(tokens_list) > 1 and tokens_list[1].type == 'STRING':
-                include_name = tokens_list[1].value
-                include_path = resolve_include_path(include_name, current_dir, lib_dir)
-                included_lines = preprocess_file(include_path, lib_dir=lib_dir, included_files=included_files)
-                output_lines.extend(included_lines)
-
-            elif tokens_list and tokens_list[0].type == 'DEFINE' and len(tokens_list) > 2:
-                define_name = tokens_list[1].value
-                define_value = tokens_list[2].value
-                macros[define_name] = define_value
-
-            elif tokens_list and tokens_list[0].type == 'OTHER' and len(tokens_list) > 3:
-                temp_instruction = tokens_list[0].value
-                temp_value1 = tokens_list[1].value
-                temp_other = tokens_list[2].value
-                temp_value2 = tokens_list[3].value
-
-                if tokens_list[1].type == 'OTHER' and temp_value1 in macros:
-                    temp_value1 = macros[temp_value1]
-
-                if tokens_list[3].type == 'OTHER' and temp_value2 in macros:
-                        temp_value2 = macros[temp_value2]
-
-                output_lines.append(f'{temp_instruction} {temp_value1} {temp_other} {temp_value2}')
-
-            elif tokens_list and tokens_list[0].type == 'OTHER' and len(tokens_list) > 2:
-                var_value = tokens_list[2].value
-                if tokens_list[2].type == 'OTHER' and var_value in macros:
-                    var_value = macros[tokens_list[2].value]
-                output_lines.append(f'{tokens_list[0].value} {tokens_list[1].value} {var_value}')
-
-            
-            else:
-                output_lines.append(line)
+        output_lines = _preprocess_lines(
+            infile.read().splitlines(),
+            current_dir,
+            lib_dir,
+            included_files,
+            macros,
+        )
 
     included_files.remove(input_path)
     return output_lines

@@ -2,6 +2,11 @@ import ply.lex as lex
 
 class LexicalAnalyzer:
 
+    def __init__(self):
+        self.errors = []
+        self.symbol_table = {}
+        self.lexer = lex.lex(module=self)
+
     reserved = {
         # -- Tipos de datos primitivos --
         'int'       : 'INT',
@@ -18,9 +23,6 @@ class LexicalAnalyzer:
         'if'        : 'IF',
         'elseif'    : 'ELSEIF',
         'else'      : 'ELSE',
-        'switch'    : 'SWITCH',
-        'case'      : 'CASE',
-        'default'   : 'DEFAULT',
 
         # -- Estructuras de iteración --
         'while'     : 'WHILE',
@@ -38,10 +40,6 @@ class LexicalAnalyzer:
 
         # -- Declaración de funciones --
         'func'      : 'FUNC',
-
-        # -- Manejo de memoria / pila --
-        'push'      : 'PUSH',
-        'pop'       : 'POP',
     }
 
     tokens = [
@@ -89,7 +87,7 @@ class LexicalAnalyzer:
         'SEMICOLON',        # ;
         'COMMA',            # ,
         'DOT',              # .  
-        'COLON',            # :
+ 
 
     ] + list(reserved.values())
 
@@ -130,10 +128,6 @@ class LexicalAnalyzer:
     t_SEMICOLON = r';'
     t_COMMA     = r','
     t_DOT       = r'\.'
-    t_COLON     = r':'
-
-    def __init__(self):
-        self.lexer = lex.lex(module=self)
 
     def t_FLOAT_LITERAL(self, t):
         r'[0-9]+\.[0-9]+([eE][+-]?[0-9]+)?'
@@ -172,6 +166,19 @@ class LexicalAnalyzer:
         # Definición regular: LETTER (LETTER | DIGIT)*
         # Si el lexema está en la tabla de reservadas, cambia el tipo
         t.type = self.reserved.get(t.value, 'ID')
+
+        # Agrega a la tabla de símbolos si es un identificador
+        if t.type == 'ID':
+            if t.value not in self.symbol_table:
+                self.symbol_table[t.value] = {
+                    "name": t.value,
+                    "type": None,
+                    "scope": None,
+                    "param": False,
+                    "array_size": None,
+                    "array_dimensions": None,
+                }
+
         return t
 
 
@@ -201,49 +208,52 @@ class LexicalAnalyzer:
     # Manejo de errores
 
     def t_error(self, t):
-        print(f"[ERROR LÉXICO] Línea {t.lineno}: carácter ilegal '{t.value[0]}'")
+        self.errors.append(
+            {
+                "line": t.lineno,
+                "char": t.value[0],
+                "message": f"Caracter ilegal '{t.value[0]}'",
+            }
+        )
         t.lexer.skip(1)
+
+    def tokenize(self, program: str):
+        """Tokeniza el codigo fuente y retorna (tokens, errores)."""
+        self.lexer.input(program)
+        self.lexer.lineno = 1
+        self.errors = []
+
+        tokens = []
+        for tok in self.lexer:
+            tokens.append(
+                {
+                    "line": tok.lineno,
+                    "type": tok.type,
+                    "value": tok.value,
+                }
+            )
+
+        return tokens, list(self.errors)
 
 
     def analyze(self, program: str):
         """Tokeniza el código fuente e imprime la tabla de tokens."""
-        self.lexer.input(program)
-        self.lexer.lineno = 1
+        tokens, errors = self.tokenize(program)
 
         print(f"\n{'='*60}")
         print(f"{'LINE':<8} {'TYPE':<20} {'VALUE'}")
         print(f"{'='*60}")
 
-        for tok in self.lexer:
-            print(f"{tok.lineno:<8} {tok.type:<20} {tok.value}")
+        for tok in tokens:
+            print(f"{tok['line']:<8} {tok['type']:<20} {tok['value']}")
+
+        if errors:
+            print("\nErrores lexicos:")
+            for error in errors:
+                print(f"  - Linea {error['line']}: {error['message']}")
 
         print(f"{'='*60}\n")
 
     
 if __name__ == "__main__":
     lex_analyzer = LexicalAnalyzer()
-
-    p = """
-    // Fibonacci interativo 
-
-    func int fibonacci(int n) {
-        if (n <= 0) {
-            return 0;
-        } elseif (n == 1) {
-            return 1;
-        }
-
-        int prev = 0;
-        int curr = 1;
-
-        for (int i = 2; i <= n; i += 1) {
-            int m = prev;
-            prev = curr;
-            curr = m + curr;
-        }
-
-        return curr;
-    }
-    """
-
-    lex_analyzer.analyze(p)

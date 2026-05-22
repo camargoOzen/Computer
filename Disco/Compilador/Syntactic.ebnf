@@ -1,0 +1,95 @@
+ /* Programa principal */ 
+program ::= declaration+
+
+declaration ::= (func_decl | struct_decl | typedef_decl | var_decl)+
+
+func_decl ::= 'func' type ID '(' param_list? ')' block
+
+param_list ::= param (',' param)*
+param ::= type ID ('[' ']')?
+
+struct_decl ::= 'struct' ID '{' (field_decl)* '}' ';'
+field_decl ::= type ID (array_suffix | matrix_suffix)? ';'
+
+typedef_decl ::= 'typedef' 'struct' '{' (field_decl)* '}' ID ';'
+
+type ::= primitive_type | 'struct'? ID
+
+primitive_type ::= 'int' | 'float' | 'char' | 'bool' | 'void'
+
+var_decl ::= type ID (array_suffix | matrix_suffix)? ('=' expr)? ';'
+matrix_suffix ::= '[' INT_LITERAL ']' '[' INT_LITERAL ']'
+array_suffix ::= '[' INT_LITERAL ']'
+
+block ::= '{' statement '}'
+statement ::= var_decl 
+            | assign_stmt 
+            | if_stmt 
+            | while_stmt 
+            | for_stmt 
+            | do_while_stmt 
+            | return_stmt 
+            | break_stmt 
+            | continue_stmt 
+            | func_call_stmt 
+            | block
+
+assign_stmt ::= lvalue assign_op expr ';'
+assign_op ::= '=' | '+=' | '-=' | '*=' | '/='
+lvalue ::= ID ('.' ID | '[' expr ']')*
+
+func_call_stmt ::= func_call ';'
+return_stmt ::= 'return' (expr)? ';'
+break_stmt ::= 'break' ';'
+continue_stmt ::= 'continue' ';'
+
+if_stmt ::= 'if' '(' expr ')' block ('elseif' '(' expr ')' block)* ('else' block)?
+
+
+while_stmt ::= 'while' '(' expr ')' block
+
+for_stmt ::= 'for' '(' for_init ';' (expr)? ';' (for_update)? ')' block
+for_init ::= var_decl_inline | assign_stmt_inline | /*vacio*/
+for_update ::= assign_stmt_inline (',' assign_stmt_inline)*
+
+var_decl_inline ::= type ID ('=' expr)?
+assign_stmt_inline ::= lvalue assign_op expr
+
+do_while_stmt ::= 'do' block 'while' '(' expr ')' ';'
+
+
+expr ::= logic_or
+logic_or ::= logic_and ('||' logic_and)*
+logicc_and ::= equality ('&&' equality)*
+equality ::= relational (('==' | '!=') relational)*
+relational ::= additive (('<' | '>' | '<=' | '>=') additive)*
+additive ::= term (('+' | '-') term)*
+term ::= unary (('*' | '/' | '%') unary)*
+
+unary ::= ('!' | '-') unary | postfix
+
+postfix ::= primary ('.' ID | '[' expr ']')*
+
+primary ::= literal | func_call | lvalue | '(' expr ')'
+
+func_call ::= ID '(' (arg_list)? ')'
+arg_list ::= expr (',' expr)*
+
+literal ::= INT_LITERAL | FLOAT_LITERAL | CHAR_LITERAL | STRING_LITERAL | 'true' | 'false' 
+
+INT_LITERAL ::= digit+ | '0' ([xX] hexa+ | [bB] bin+)
+FLOAT_LITERAL ::= digit+ '.' digit+ ([eE] [+-]? digit+)?
+
+CHAR_LITERAL ::= "'" [^'] "'"
+
+STRING_LITERAL ::= '"' [^"]* '"'
+
+ID ::= id_prefix (id_suffix)*
+
+id_prefix ::= letter | '_'
+id_suffix ::= id_prefix | digit
+
+letter ::= [a-zA-Z]
+digit ::= [0-9]
+hexa ::= [0-9a-fA-F]
+bin ::= [01]

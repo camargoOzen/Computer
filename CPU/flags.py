@@ -17,4 +17,12 @@ class Flags:
     def __str__(self):
         return f"CF: {self.CF}, NF: {self.NF}, ZF: {self.ZF}, OF: {self.OF}, IF: {self.IF}"
     
+    def reset(self):
+        """Reset all flags to initial state"""
+        self.ZF = 0  # Zero Flag
+        self.NF = 0  # Negative Flag
+        self.CF = 0  # Carry Flag
+        self.OF = 0  # Overflow Flag
+        self.IF = 0  # Interrupt Enable Flag
+    
 flags = Flags()

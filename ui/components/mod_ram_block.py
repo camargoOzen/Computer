@@ -10,7 +10,7 @@ class ModRamBlock:
     def _create_components(self):
         self.address_field = ft.TextField(
             label="Dirección",
-            hint_text="Dirección en HEX",
+            hint_text="Dirección HEX (hasta 16 dígitos)",
             capitalization="CHARACTERS",
             width=200
         )
