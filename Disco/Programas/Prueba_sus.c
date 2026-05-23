@@ -35,10 +35,12 @@ func void main(){
     bool p1_mayor;
     bool anidado;
 
-    p1.x = 1;
-    p1.y = 2;
-    p2.x = 4;
-    p2.y = 3;
+    
+    p1.x = 4;
+    p1.y = 3;
+    p2.x = 1;
+    p2.y = 2;
+    
 
 
     x = 22* 2 -3 *y;
@@ -64,7 +66,7 @@ func void main(){
         p1_mayor = false;
     }
 
-    if(1 > 2){
+    if(2 < 1){
         anidado = false;
     }else if(1 < 2){
         anidado = true;
