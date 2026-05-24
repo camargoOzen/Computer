@@ -34,9 +34,9 @@ class Load:
         match opcode:       
             #LOADI
             case "14":
-                retrieved_value = ram.read(register2)
+                addr = int(registers.values[register2], 16)    # contenido de R1 = 4 → lee mem[4]
+                retrieved_value = ram.read(addr)
                 registers.values[register1] = retrieved_value
-                print("Load memory value: ", retrieved_value, " from the memory address: ",register2," in register", register1)
             #STOREI
             case "15":
                 address = registers.values[register2]
