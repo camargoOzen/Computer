@@ -831,16 +831,11 @@ class CodeGenerator:
 
     def visit_Call_node(self, node):
         for arg in node.args:
-            reg = arg.accept(self)
-            if isinstance(arg, Number_node):
-                self.emit("LOADV", f"R{reg}", f"{arg.value}")
-            else:
-                self.emit("LOAD", f"R{reg}", f"{arg.ID}")  # Asegurar que el argumento esté en memoria (si es variable)
+            reg = arg.accept(self)   # ya emite LOADV, LOAD, LOADI, ADD, etc. según el tipo
             self.emit("PUSH", f"R{reg}")
             self.free_register(reg)
-        
-        self.emit("CALL", f"func_{node.ID}")
 
+        self.emit("CALL", f"func_{node.ID}")
         reg = self.allocate_register()
         return reg
 
