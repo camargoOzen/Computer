@@ -164,8 +164,15 @@ def p_var_decl(p):
             # Guardar las dimensiones para acceso multidimensional
             symbol_table[p[2]]["array_dimensions"] = (p[3].size1, p[3].size2) if p[3] else None
         else:
-            symbol_table[p[2]]["array_size"] = p[3].size if p[3] else None
-            symbol_table[p[2]]["array_dimensions"] = (p[3].size,) if p[3] else None
+            if isinstance(p[3], ast.Matriz_suffix_node):
+                symbol_table[p[2]]["array_size"] = p[3].size1 * p[3].size2 if p[3] else None
+                symbol_table[p[2]]["array_dimensions"] = (p[3].size1, p[3].size2) if p[3] else None
+            elif isinstance(p[3], ast.Array_suffix_node):
+                symbol_table[p[2]]["array_size"] = p[3].size if p[3] else None
+                symbol_table[p[2]]["array_dimensions"] = (p[3].size,) if p[3] else None
+            else:
+                symbol_table[p[2]]["array_size"] = None
+                symbol_table[p[2]]["array_dimensions"] = None
     
     p[0] = ast.Var_node(p[1], p[2], p[3], p[4])
 
