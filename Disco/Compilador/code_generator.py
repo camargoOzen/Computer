@@ -176,8 +176,7 @@ class CodeGenerator:
             for field in self.symbol_table[info["type"]]["field_list"]:
                 self.emit_data_label(f"{qualified_name}_{field}")
                 self.emit_data(".SIZE", self.symbol_table[field]["array_size"] if self.symbol_table[field].get("array_size") else 1)
-        else:
-            
+        else:    
             self.emit_data_label(qualified_name)
             self.emit_data(".SIZE",1)
         if node.init:

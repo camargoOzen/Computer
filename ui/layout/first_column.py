@@ -116,6 +116,8 @@ class FirstColumn():
             self.relocatable_code_block.code_editor.value = reloc_code
         self.page.update()
 
+        compilador.clear()
+
     def _preprocess_high_level_code(self, _=None):
         program = (self.high_level_code.code_editor.value or "").strip()
 
