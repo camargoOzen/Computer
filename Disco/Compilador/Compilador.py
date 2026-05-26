@@ -195,6 +195,16 @@ class Compiler:
                 f.write(self.binary_code + '\n')
             print(f"Código binario guardado en: {output_file}")
 
+    def clear(self):
+        """Reinicia el estado del compilador para una nueva compilación"""
+        self.source_code = None
+        self.tokens = None
+        self.ast = None
+        self.symbol_table = {}
+        self.semantic_ok = False
+        self.ir_code = None
+        self.binary_code = None
+        self.errors = []
 
 def main():
     if len(sys.argv) not in [2, 3]:
